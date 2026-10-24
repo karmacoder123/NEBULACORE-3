@@ -7472,5 +7472,11 @@ void main() {
       }
     }, 1500));
   </script>
-</body>
+</body>document.addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-media-start]');
+    if (btn) startMedia();
+    const stop = e.target.closest('[data-media-stop]');
+    if (stop) stopMedia();
+  });
+</script>
 </html>
