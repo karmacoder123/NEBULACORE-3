@@ -1,9 +1,9 @@
 NEBULA CORE — cartella pronta per la pubblicazione
 
 CONTENUTO
-  index.html    l'app (v2.16), 225 KB: pagina compressa che si espande da sola all'avvio
+  index.html    l'app (v2.18), 225 KB: pagina compressa che si espande da sola all'avvio
                 (serve un browser recente: Safari 16.4+, Chrome 80+, Firefox 113+).
-                La versione leggibile/modificabile è NebulaCore_v2_16_Offline.html (865 KB, non per GitHub web).
+                La versione leggibile/modificabile è NebulaCore_v2_18_Offline.html (892 KB, non per GitHub web).
   privacy.html  privacy policy IT/EN (richiesta da Google Play)
   _headers      permessi camera/microfono/sensori (usato da Cloudflare Pages e Netlify; GitHub Pages lo ignora)
 
