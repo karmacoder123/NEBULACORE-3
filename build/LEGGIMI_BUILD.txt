@@ -1,0 +1,8 @@
+RIGENERARE index.html DAL SORGENTE
+Servono Node.js e Python 3.
+  1. cd build
+  2. npm install
+  3. python3 build_index.py ../sorgente/NebulaCore_v2_22_Offline.html
+  4. copia out/index.html nella cartella "sito" prima di pubblicare
+Il sorgente (NebulaCore_v2_22_Offline.html) è la versione leggibile e modificabile, con three.js incluso: 896 KB, troppo grande per
+l'editor web di GitHub (limite 288 KB indicato da te), ma ideale come copia di lavoro e per Android.

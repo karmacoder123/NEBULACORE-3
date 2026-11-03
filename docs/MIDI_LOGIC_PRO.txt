@@ -1,0 +1,24 @@
+NEBULA CORE COME CONTROLLER MIDI PER LOGIC PRO
+
+COSA INVIA
+  Note       tutte le note suonate da Nebula (tocco, mano, microfono, note cinetiche, cristalli, anelli, tastiera)
+  CC1        posizione orizzontale del dito/mouse/mano (0-127)
+  CC74       posizione verticale, invertita: in alto = 127
+  CC11       dito premuto o mano chiusa = 127, altrimenti 75
+  Con l'audio interno in MUTO le note escono comunque in MIDI (utile se il suono lo fa Logic).
+
+PREPARAZIONE SU MAC (una volta sola)
+  1. Apri "Configurazione Audio MIDI" > Finestra > Mostra Studio MIDI.
+  2. Doppio clic su "Driver IAC" e spunta "Dispositivo online".
+  3. In Logic crea una traccia Software Instrument: l'ingresso IAC viene riconosciuto da solo.
+
+USO
+  1. Apri Nebula da HTTPS (GitHub Pages) con Chrome, Edge o Brave sul Mac.
+  2. Premi "MIDI" nella barra in basso e consenti l'accesso quando il browser lo chiede.
+  3. Scheda AUDIO > "MIDI Out": scegli porta (automatica = IAC se presente) e canale.
+  4. Dalla volta successiva si riattiva da solo se il permesso è già stato concesso.
+
+LIMITI
+  - Web MIDI non esiste su Safari e su iPhone/iPad (qualsiasi browser).
+  - Serve HTTPS: da file locale il browser può negarlo.
+  - Nota lunga = durata stimata dal timbro e dal sustain (il drone dura fino a 8 s).
