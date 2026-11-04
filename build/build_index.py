@@ -3,7 +3,7 @@
 Uso:   npm install        (una volta sola: installa three e esbuild)
        python3 build_index.py ../sorgente/NebulaCore_v2_20_Offline.html
 Output: out/index.html (da pubblicare) e out/core.html (pagina espansa, per prove)."""
-import gzip, base64, re, sys, subprocess, os
+import gzip, base64, re, sys, subprocess, os, shutil
 src_path = sys.argv[1]
 os.makedirs('out', exist_ok=True)
 s = open(src_path, encoding='utf-8').read()
@@ -39,4 +39,10 @@ loader = '''<!DOCTYPE html>
 </html>
 '''
 open('out/index.html', 'w', encoding='utf-8').write(loader)
-print('out/index.html: %.1f KB (limite 288) | pagina espansa %d KB' % (len(loader.encode()) / 1024, len(inner) // 1024))
+repo_root = os.path.dirname(os.path.dirname(os.path.abspath(src_path)))
+site_dir = os.path.join(repo_root, 'sito')
+os.makedirs(site_dir, exist_ok=True)
+shutil.copyfile('out/index.html', os.path.join(repo_root, 'index.html'))
+shutil.copyfile('out/index.html', os.path.join(site_dir, 'index.html'))
+print('out/index.html, ../index.html, ../sito/index.html: %.1f KB (limite 288) | pagina espansa %d KB' %
+      (len(loader.encode()) / 1024, len(inner) // 1024))
