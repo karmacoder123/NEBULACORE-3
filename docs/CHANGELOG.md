@@ -5,6 +5,7 @@ Base di partenza: la v2.5 (index.html caricato dall'utente). Le versioni sono st
 ## Non rilasciato — ZEN & SLEEP
 - Aggiunto alla scheda AUDIO & SYNTH un layer continuo indipendente dal piano: toni puri, battimenti binaurali stereo, rumore rosa/bruno e drone armonico, con interazione reciproca con lo sciame. Il movimento modula lievemente l'intonazione e il livello sonoro; il ritmo lento dei suoni genera una pulsazione radiale morbida delle particelle.
 - Aggiunti slider per frequenza del tono (100–1000 Hz), battimento binaurale (0,5–12 Hz) e volumi, oltre a preset rapidi, timer con dissolvenza nell'ultimo minuto e guida visiva del respiro a 0,1 Hz.
+- Corretto il routing del pannello ZEN & SLEEP nel menu: ora appare nella scheda AUDIO invece di quella INPUT.
 - Il layer Zen resta attivo in background solo quando l'utente lo avvia; i suoni sono presentati come esperienza soggettiva, non come trattamento medico.
 
 ## v2.6 — stabilità e offline
