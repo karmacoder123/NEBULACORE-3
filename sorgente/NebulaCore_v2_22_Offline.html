@@ -4641,26 +4641,19 @@ void main() {
       <div class="section-header"><span>🌙</span> ZEN &amp; SLEEP · Sorgenti continue</div>
       <div class="chip-group" style="margin-bottom:6px; flex-wrap:wrap;">
         <button class="chip-btn" onclick="setZenPreset('SLEEP')">DELTA + BRUNO</button>
-        <button class="chip-btn" onclick="setZenPreset('432')">432 Hz</button>
-        <button class="chip-btn" onclick="setZenPreset('528')">528 Hz</button>
+        <button class="chip-btn" onclick="setZenPreset('432')">432 HZ</button>
+        <button class="chip-btn" onclick="setZenPreset('528')">528 HZ</button>
         <button class="chip-btn" onclick="setZenPreset('BOWL')">CIOTOLA + THETA</button>
       </div>
       <div class="control-item">
-        <span>TONO PURO</span>
-        <div style="display:flex; gap:6px; width:100%;">
-          <select id="zen-tone-frequency" aria-label="Frequenza del tono puro" onchange="setZenToneFrequency(this.value)" style="flex:1; min-width:0; background:#1b1028; color:#e4d7ff; border:1px solid #6f5594; border-radius:8px; padding:8px; font-size:11px;">
-            <option value="174">174 Hz</option><option value="285">285 Hz</option><option value="396">396 Hz</option><option value="432" selected>432 Hz</option><option value="528">528 Hz</option><option value="639">639 Hz</option>
-          </select>
-          <button class="chip-btn" id="btn-zen-tone" aria-pressed="false" onclick="toggleZenTone()">TONO: OFF</button>
-        </div>
+        <span>FREQUENZA TONO <b id="val-zen-tone-frequency">432 Hz</b></span>
+        <input type="range" id="sl-zen-tone-frequency" min="100" max="1000" step="1" value="432" aria-label="Frequenza del tono puro, da 100 a 1000 Hz">
+        <button class="chip-btn" id="btn-zen-tone" aria-pressed="false" onclick="toggleZenTone()">TONO: OFF</button>
       </div>
       <div class="control-item">
-        <span>BATTIMENTO BINAURALE</span>
-        <div style="display:flex; gap:6px; width:100%;">
-          <select id="zen-binaural-band" aria-label="Banda del battimento binaurale" onchange="setZenBinauralBand(this.value)" style="flex:1; min-width:0; background:#1b1028; color:#e4d7ff; border:1px solid #6f5594; border-radius:8px; padding:8px; font-size:11px;">
-            <option value="OFF">Disattivo</option><option value="2">Delta · 2 Hz</option><option value="6">Theta · 6 Hz</option><option value="10">Alpha · 10 Hz</option>
-          </select>
-        </div>
+        <span>BATTIMENTO BINAURALE <b id="val-zen-binaural-beat">2.0 Hz</b></span>
+        <input type="range" id="sl-zen-binaural-beat" min="0.5" max="12" step="0.5" value="2" aria-label="Differenza binaurale da 0,5 a 12 Hz">
+        <button class="chip-btn" id="btn-zen-binaural" aria-pressed="false" onclick="toggleZenBinaural()">BINAURALE: OFF</button>
       </div>
       <div class="control-item">
         <span>RUMORE COLORATO</span>
@@ -4689,7 +4682,7 @@ void main() {
           <button class="chip-btn" id="btn-zen-timer" aria-pressed="false" onclick="toggleZenSleepTimer()">AVVIA TIMER</button>
         </div>
       </div>
-      <div class="slider-hint" id="zen-timer-status" role="status" aria-live="polite">Audio Zen indipendente dal piano. Il timer dissolve le sorgenti Zen nell'ultimo minuto e poi le arresta.</div>
+      <div class="slider-hint" id="zen-timer-status" role="status" aria-live="polite">Interazione armonica attiva con i suoni Zen: il movimento modula lievemente l'intonazione; il ritmo lento delle frequenze anima lo sciame con una pulsazione radiale morbida. Il timer dissolve le sorgenti Zen nell'ultimo minuto e poi le arresta.</div>
       <div class="slider-hint">I battimenti binaurali richiedono cuffie stereo. Le percezioni e gli effetti soggettivi variano; questi suoni non sono un trattamento medico. La ciotola è un drone sintetico armonico.</div>
     </div>
 
@@ -5191,9 +5184,9 @@ void main() {
     let masterGain = null, dryGain = null, reverbGain = null, reverbNode = null;
     let micGainMultiplier = 2.0;
     const zenAudio = {
-      toneFrequency: 432, binauralBeat: 0, noiseColor: 'OFF', toneVolume: 0.18, noiseVolume: 0.20,
+      toneFrequency: 432, binauralBeat: 2, noiseColor: 'OFF', toneVolume: 0.18, noiseVolume: 0.20,
       toneBus: null, noiseBus: null, tone: null, binaural: null, bowl: null, noise: null,
-      noiseBuffers: {}, timerId: 0, timerEndsAt: 0, timerFade: 1
+      noiseBuffers: {}, timerId: 0, timerEndsAt: 0, timerFade: 1, motionActivity: 0, lastCouplingUpdate: 0
     };
     function zenAudioIsActive() {
       return !!(zenAudio.tone || zenAudio.binaural || zenAudio.bowl || zenAudio.noise);
@@ -5618,7 +5611,39 @@ void main() {
       if (!audioCtx || !zenAudio.toneBus) return;
       const now = audioCtx.currentTime;
       zenAudio.toneBus.gain.setTargetAtTime(zenAudio.toneVolume * zenAudio.timerFade, now, 0.08);
-      zenAudio.noiseBus.gain.setTargetAtTime(zenAudio.noiseVolume * zenAudio.timerFade, now, 0.08);
+      zenAudio.noiseBus.gain.setTargetAtTime(zenAudio.noiseVolume * zenAudio.timerFade * (0.8 + zenAudio.motionActivity * 0.2), now, 0.08);
+    }
+    function zenCouplingRate() {
+      if (zenAudio.binaural) return Math.max(0.08, Math.min(0.4, zenAudio.binauralBeat * 0.05));
+      if (zenAudio.tone) return 0.08 + ((zenAudio.toneFrequency - 100) / 900) * 0.08;
+      return 0.1;
+    }
+    function updateZenMotionCoupling(avgSpeed, dt, time) {
+      const active = zenAudioIsActive();
+      const target = active ? Math.max(0, Math.min(1, avgSpeed / 4)) : 0;
+      zenAudio.motionActivity += (target - zenAudio.motionActivity) * (1 - Math.exp(-dt / 1.2));
+      if (!active || !audioCtx || time - zenAudio.lastCouplingUpdate < 0.08) return;
+      zenAudio.lastCouplingUpdate = time;
+      const offset = Math.sin(time * Math.PI * 2 * zenCouplingRate()) * zenAudio.motionActivity * 0.003;
+      const now = audioCtx.currentTime;
+      if (zenAudio.tone && zenAudio.tone.oscillator)
+        zenAudio.tone.oscillator.frequency.setTargetAtTime(zenAudio.toneFrequency * (1 + offset), now, 0.12);
+      if (zenAudio.binaural) {
+        const carrier = 150 * (1 + offset);
+        zenAudio.binaural.leftOscillator.frequency.setTargetAtTime(carrier, now, 0.12);
+        zenAudio.binaural.rightOscillator.frequency.setTargetAtTime(carrier + zenAudio.binauralBeat, now, 0.12);
+      }
+      if (zenAudio.bowl) zenAudio.bowl.partials.forEach(partial =>
+        partial.oscillator.frequency.setTargetAtTime(partial.frequency * (1 + offset), now, 0.12));
+      if (zenAudio.noiseBus)
+        zenAudio.noiseBus.gain.setTargetAtTime(zenAudio.noiseVolume * zenAudio.timerFade * (0.8 + zenAudio.motionActivity * 0.2), now, 0.12);
+    }
+    function zenParticlePulse(time) {
+      if (!zenAudioIsActive()) return 0;
+      const toneLevel = zenAudio.tone || zenAudio.binaural || zenAudio.bowl ? zenAudio.toneVolume : 0;
+      const noiseLevel = zenAudio.noise ? zenAudio.noiseVolume : 0;
+      const level = Math.min(1, Math.max(toneLevel, noiseLevel) * 3) * zenAudio.timerFade;
+      return Math.sin(time * Math.PI * 2 * zenCouplingRate()) * level * 0.12;
     }
     function createZenVoice(bus, level) {
       const voice = { gain: audioCtx.createGain(), nodes: [] };
@@ -5650,12 +5675,11 @@ void main() {
       btn.setAttribute('aria-pressed', String(on));
     }
     function setZenToneFrequency(value) {
-      zenAudio.toneFrequency = Number(value);
-      if (zenAudio.tone) {
-        stopZenVoice(zenAudio.tone);
-        zenAudio.tone = null;
-        startZenTone();
-      }
+      zenAudio.toneFrequency = Math.max(100, Math.min(1000, Number(value) || 432));
+      const label = document.getElementById('val-zen-tone-frequency');
+      if (label) label.textContent = Math.round(zenAudio.toneFrequency) + ' Hz';
+      const osc = zenAudio.tone && zenAudio.tone.oscillator;
+      if (osc && audioCtx) osc.frequency.setTargetAtTime(zenAudio.toneFrequency, audioCtx.currentTime, 0.04);
     }
     function startZenTone() {
       if (!ensureZenBuses()) return;
@@ -5666,6 +5690,7 @@ void main() {
       osc.connect(voice.gain);
       osc.start();
       voice.nodes.push(osc);
+      voice.oscillator = osc;
       zenAudio.tone = voice;
       updateZenToggle('btn-zen-tone', true, 'TONO: ON', 'TONO: OFF');
     }
@@ -5677,30 +5702,44 @@ void main() {
       } else startZenTone();
     }
     function setZenBinauralBand(value) {
-      zenAudio.binauralBeat = Number(value) || 0;
+      const beat = Number(value);
+      if (!Number.isFinite(beat) || beat < 0.5 || beat > 12) return;
+      zenAudio.binauralBeat = beat;
+      const label = document.getElementById('val-zen-binaural-beat');
+      if (label) label.textContent = beat.toFixed(1) + ' Hz';
+      if (zenAudio.binaural && audioCtx) {
+        zenAudio.binaural.rightOscillator.frequency.setTargetAtTime(150 + beat, audioCtx.currentTime, 0.04);
+      }
+    }
+    function startZenBinaural() {
+      if (!ensureZenBuses()) return;
+      const voice = createZenVoice(zenAudio.toneBus, 0.42);
+      const merger = audioCtx.createChannelMerger(2);
+      merger.connect(voice.gain);
+      voice.nodes.push(merger);
+      const oscillators = [150, 150 + zenAudio.binauralBeat].map((frequency, index) => {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = 'sine';
+        osc.frequency.value = frequency;
+        gain.gain.value = 0.5;
+        osc.connect(gain);
+        gain.connect(merger, 0, index);
+        osc.start();
+        voice.nodes.push(osc, gain);
+        return osc;
+      });
+      voice.leftOscillator = oscillators[0];
+      voice.rightOscillator = oscillators[1];
+      zenAudio.binaural = voice;
+      updateZenToggle('btn-zen-binaural', true, 'BINAURALE: ON', 'BINAURALE: OFF');
+    }
+    function toggleZenBinaural() {
       if (zenAudio.binaural) {
         stopZenVoice(zenAudio.binaural);
         zenAudio.binaural = null;
-      }
-      if (zenAudio.binauralBeat > 0) {
-        if (!ensureZenBuses()) return;
-        const voice = createZenVoice(zenAudio.toneBus, 0.42);
-        const merger = audioCtx.createChannelMerger(2);
-        merger.connect(voice.gain);
-        voice.nodes.push(merger);
-        [150, 150 + zenAudio.binauralBeat].forEach((frequency, index) => {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          osc.type = 'sine';
-          osc.frequency.value = frequency;
-          gain.gain.value = 0.5;
-          osc.connect(gain);
-          gain.connect(merger, 0, index);
-          osc.start();
-          voice.nodes.push(osc, gain);
-        });
-        zenAudio.binaural = voice;
-      }
+        updateZenToggle('btn-zen-binaural', false, 'BINAURALE: ON', 'BINAURALE: OFF');
+      } else startZenBinaural();
     }
     function createZenNoiseBuffer(color) {
       if (zenAudio.noiseBuffers[color]) return zenAudio.noiseBuffers[color];
@@ -5761,6 +5800,7 @@ void main() {
         lfo.frequency.value = 0.1;
         depth.gain.value = 0.8;
         lfo.connect(depth);
+        voice.partials = [];
         [174.6, 349.2, 523.8].forEach((frequency, index) => {
           const osc = audioCtx.createOscillator();
           const partial = audioCtx.createGain();
@@ -5772,6 +5812,7 @@ void main() {
           partial.connect(voice.gain);
           osc.start();
           voice.nodes.push(osc, partial);
+          voice.partials.push({ oscillator: osc, frequency });
         });
         lfo.start();
         voice.nodes.push(lfo, depth);
@@ -5785,12 +5826,10 @@ void main() {
         zenAudio[key] = null;
       });
       updateZenToggle('btn-zen-tone', false, 'TONO: ON', 'TONO: OFF');
+      updateZenToggle('btn-zen-binaural', false, 'BINAURALE: ON', 'BINAURALE: OFF');
       updateZenToggle('btn-zen-bowl', false, 'CIOTOLA ARMONICA: ON', 'CIOTOLA ARMONICA: OFF');
-      const band = document.getElementById('zen-binaural-band');
       const noise = document.getElementById('zen-noise-color');
-      if (band) band.value = 'OFF';
       if (noise) noise.value = 'OFF';
-      zenAudio.binauralBeat = 0;
       zenAudio.noiseColor = 'OFF';
     }
     function setZenPreset(preset) {
@@ -5799,18 +5838,22 @@ void main() {
       zenAudio.timerFade = 1;
       setZenBusLevels();
       if (preset === 'SLEEP') {
-        document.getElementById('zen-binaural-band').value = '2';
+        zenAudio.binauralBeat = 2;
+        document.getElementById('sl-zen-binaural-beat').value = '2';
+        setZenBinauralBand(2);
         document.getElementById('zen-noise-color').value = 'BROWN';
-        setZenBinauralBand('2');
+        startZenBinaural();
         setZenNoiseColor('BROWN');
       } else if (preset === '432' || preset === '528') {
         const frequency = preset === '432' ? '432' : '528';
-        document.getElementById('zen-tone-frequency').value = frequency;
+        document.getElementById('sl-zen-tone-frequency').value = frequency;
         setZenToneFrequency(frequency);
         startZenTone();
       } else if (preset === 'BOWL') {
-        document.getElementById('zen-binaural-band').value = '6';
-        setZenBinauralBand('6');
+        zenAudio.binauralBeat = 6;
+        document.getElementById('sl-zen-binaural-beat').value = '6';
+        setZenBinauralBand(6);
+        startZenBinaural();
         toggleZenBowl();
       }
     }
@@ -7196,6 +7239,7 @@ void main() {
       let closestDistWandererSq = 9999999;
       let closestDistSpectraSq = 9999999;
       const sampleStride = 40; // 500 particelle campionate ad alta precisione
+      const zenAudioPulse = zenParticlePulse(time);
 
       for (let i = 0; i < currentParticleCount; i++) {
         const i3 = i * 3;
@@ -7208,6 +7252,14 @@ void main() {
         velocities[i3] += (homes[i3] - positions[i3]) * anchorPull;
         velocities[i3 + 1] += (homes[i3 + 1] - positions[i3 + 1]) * anchorPull;
         velocities[i3 + 2] += (homes[i3 + 2] - positions[i3 + 2]) * anchorPull;
+
+        if (zenAudioPulse !== 0) {
+          const radius = Math.hypot(positions[i3], positions[i3 + 1], positions[i3 + 2]) || 1;
+          const pulse = zenAudioPulse * Math.min(1.5, radius / 500);
+          velocities[i3] += (positions[i3] / radius) * pulse;
+          velocities[i3 + 1] += (positions[i3 + 1] / radius) * pulse;
+          velocities[i3 + 2] += (positions[i3 + 2] / radius) * pulse;
+        }
 
         // --- ATTRATTORE GRAVITAZIONALE TEMPORANEO TOUCH / MOUSE ---
         if (hasAttractor) {
@@ -7363,11 +7415,12 @@ void main() {
       updateTrailSystem(dt, time);
 
       detectImpacts(now);
+      const sampleCount = currentParticleCount / sampleStride;
+      const avgSpeed = sampledSpeedSum / sampleCount;
+      updateZenMotionCoupling(avgSpeed, dt, time);
 
       // --- GENERATORE DI NOTE BASATO SUL MOVIMENTO DELLE PARTICELLE ---
       if (isKineticNotesOn && (audioMode !== 'OFF' || MIDI.on)) {
-        const sampleCount = currentParticleCount / sampleStride;
-        const avgSpeed = sampledSpeedSum / sampleCount;
         const kineticFlux = avgSpeed * kineticSensitivity * ringAudioMod;
 
         // Cadenza calcolata dalla divisione metrica e dal pattern
@@ -7860,6 +7913,8 @@ void main() {
         const el = document.getElementById('val-zen-noise-volume'); if (el) el.innerText = Math.round(v * 100) + '%';
         setZenBusLevels();
       });
+      bindSlider('sl-zen-tone-frequency', 'val-zen-tone-frequency', setZenToneFrequency);
+      bindSlider('sl-zen-binaural-beat', 'val-zen-binaural-beat', setZenBinauralBand);
       bindSlider('sl-piano-bright', 'val-piano-bright', v => pianoBrightness = v);
       bindSlider('sl-note-attack', 'val-note-attack', v => {
         noteAttack = 0.005 * Math.pow(400, v / 100);   // 5 ms … 2 s, scala esponenziale
@@ -8502,7 +8557,7 @@ void main() {
       const rules = [['#btn-trails-phys', 'drop'], ['button[onclick="togglePhysicsModal()"]', 'drop'],
         ['#preset-chips', 'swarm'], ['#sl-particles', 'swarm'], ['#btn-trails-panel', 'swarm'], ['#btn-autorot-panel', 'swarm'],
         ['#btn-rings', 'physics'], ['#btn-touch-mode-panel', 'physics'], ['#sl-fric', 'physics'], ['#sl-central-attr', 'physics'], ['#sl-wander-speed', 'physics'], ['#sl-spectra-speed', 'physics'],
-        ['#sl-sun-intensity', 'light'], ['#btn-midi', 'audio'], ['#btn-ambient', 'audio-top'], ['#btn-crystal', 'audio'], ['#btn-mic-trigger', 'audio'], ['#piano-keyboard-grid', 'audio'],
+        ['#sl-sun-intensity', 'light'], ['#btn-midi', 'audio'], ['#btn-ambient', 'audio-top'], ['#btn-crystal', 'audio'], ['#btn-mic-trigger', 'audio'], ['#sl-zen-tone-frequency', 'audio'], ['#piano-keyboard-grid', 'audio'],
         ['#btn-accel-panel', 'input'], ['#btn-cam', 'input'], ['#btn-screenshot-panel', 'input'], ['a[href="/portal"]', 'input']];
       document.querySelectorAll('#console-panel .panel-section, #physics-modal .modal-section').forEach(sec => {
         let dest = 'input';
