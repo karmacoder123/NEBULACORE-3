@@ -2,6 +2,11 @@
 
 Base di partenza: la v2.5 (index.html caricato dall'utente). Le versioni sono state verificate in un browser simulato (jsdom): nessuna prova ancora su GPU, Brave o iPhone reali.
 
+## Non rilasciato — ZEN & SLEEP
+- Aggiunto alla scheda AUDIO & SYNTH un layer continuo indipendente dal piano: toni puri, battimenti binaurali stereo, rumore rosa/bruno e drone armonico.
+- Aggiunti preset rapidi, controlli di volume, timer con dissolvenza nell'ultimo minuto e guida visiva del respiro a 0,1 Hz.
+- Il layer Zen resta attivo in background solo quando l'utente lo avvia; i suoni sono presentati come esperienza soggettiva, non come trattamento medico.
+
 ## v2.6 — stabilità e offline
 - three.js incluso nel file; rimosso `/_aistudio-iframe.js`. Corretto il crash con microfono attivo (`micEnergy` fuori ambito).
 - Esplosione sul picco del microfono (timer separato), etichette degli slider non più sovrascritte, attrattore allineato al dito (proiezione reale), forze nello spazio locale con autorotazione, fisica indipendente dal refresh rate.

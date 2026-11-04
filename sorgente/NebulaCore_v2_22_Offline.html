@@ -679,6 +679,11 @@
     #pip-container.mini { width: auto; padding: 4px; }
     #pip-container.mini #pip-canvas, #pip-container.mini #pip-status, #pip-container.mini #video-preview { display: none !important; }
     #pip-toggle { align-self: flex-end; margin-bottom: 3px; padding: 2px 9px; min-height: 0; font-size: 10px; }
+    #zen-breath-guide { position: fixed; left: 50%; top: 50%; width: min(38vmin, 220px); aspect-ratio: 1; border: 1px solid rgba(127, 233, 255, .55); border-radius: 50%; box-shadow: 0 0 32px rgba(0, 229, 255, .18), inset 0 0 24px rgba(0, 229, 255, .12); color: rgba(180, 244, 255, .75); display: grid; place-items: center; font-size: 10px; letter-spacing: .18em; pointer-events: none; opacity: 0; transform: translate(-50%, -50%) scale(.72); z-index: 10; }
+    #zen-breath-guide.active { opacity: 1; animation: zen-breathe 10s ease-in-out infinite; }
+    #zen-breath-guide::after { content: "INSPIRA"; animation: zen-breathe-label 10s steps(1, end) infinite; }
+    @keyframes zen-breathe { 0%, 100% { transform: translate(-50%, -50%) scale(.72); opacity: .35; } 50% { transform: translate(-50%, -50%) scale(1.05); opacity: .8; } }
+    @keyframes zen-breathe-label { 0%, 49.99% { content: "INSPIRA"; } 50%, 100% { content: "ESPIRA"; } }
   </style>
 
   <!-- Script Three.js & MediaPipe via CDN veloci -->
@@ -4371,6 +4376,7 @@ void main() {
 <body>
   <div id="flash-overlay"></div>
   <div id="canvas-container"></div>
+  <div id="zen-breath-guide" aria-hidden="true"></div>
   <div id="attractor-indicator"></div>
 
   <!-- Smart Banner iPhone Rilevamento Automatico -->
@@ -4629,6 +4635,62 @@ void main() {
         <span>SOGLIA MICROFONO <b id="val-athresh">0.12</b></span>
         <input type="range" id="sl-athresh" min="0.0" max="0.50" step="0.01" value="0.12">
       </div>
+    </div>
+
+    <div class="panel-section" style="border-color:#b58cff; background:rgba(28, 12, 42, 0.48);">
+      <div class="section-header"><span>🌙</span> ZEN &amp; SLEEP · Sorgenti continue</div>
+      <div class="chip-group" style="margin-bottom:6px; flex-wrap:wrap;">
+        <button class="chip-btn" onclick="setZenPreset('SLEEP')">DELTA + BRUNO</button>
+        <button class="chip-btn" onclick="setZenPreset('432')">432 Hz</button>
+        <button class="chip-btn" onclick="setZenPreset('528')">528 Hz</button>
+        <button class="chip-btn" onclick="setZenPreset('BOWL')">CIOTOLA + THETA</button>
+      </div>
+      <div class="control-item">
+        <span>TONO PURO</span>
+        <div style="display:flex; gap:6px; width:100%;">
+          <select id="zen-tone-frequency" aria-label="Frequenza del tono puro" onchange="setZenToneFrequency(this.value)" style="flex:1; min-width:0; background:#1b1028; color:#e4d7ff; border:1px solid #6f5594; border-radius:8px; padding:8px; font-size:11px;">
+            <option value="174">174 Hz</option><option value="285">285 Hz</option><option value="396">396 Hz</option><option value="432" selected>432 Hz</option><option value="528">528 Hz</option><option value="639">639 Hz</option>
+          </select>
+          <button class="chip-btn" id="btn-zen-tone" aria-pressed="false" onclick="toggleZenTone()">TONO: OFF</button>
+        </div>
+      </div>
+      <div class="control-item">
+        <span>BATTIMENTO BINAURALE</span>
+        <div style="display:flex; gap:6px; width:100%;">
+          <select id="zen-binaural-band" aria-label="Banda del battimento binaurale" onchange="setZenBinauralBand(this.value)" style="flex:1; min-width:0; background:#1b1028; color:#e4d7ff; border:1px solid #6f5594; border-radius:8px; padding:8px; font-size:11px;">
+            <option value="OFF">Disattivo</option><option value="2">Delta · 2 Hz</option><option value="6">Theta · 6 Hz</option><option value="10">Alpha · 10 Hz</option>
+          </select>
+        </div>
+      </div>
+      <div class="control-item">
+        <span>RUMORE COLORATO</span>
+        <select id="zen-noise-color" aria-label="Colore del rumore" onchange="setZenNoiseColor(this.value)" style="width:100%; background:#1b1028; color:#e4d7ff; border:1px solid #6f5594; border-radius:8px; padding:8px; font-size:11px;">
+          <option value="OFF">Disattivo</option><option value="BROWN">Bruno</option><option value="PINK">Rosa</option>
+        </select>
+      </div>
+      <div class="chip-group" style="margin:6px 0;">
+        <button class="chip-btn" id="btn-zen-bowl" aria-pressed="false" onclick="toggleZenBowl()">CIOTOLA ARMONICA: OFF</button>
+        <button class="chip-btn" id="btn-zen-breath" aria-pressed="false" onclick="toggleZenBreathing()">RESPIRO GUIDATO: OFF</button>
+      </div>
+      <div class="control-item">
+        <span>VOLUME TONI <b id="val-zen-tone-volume">18%</b></span>
+        <input type="range" id="sl-zen-tone-volume" min="0" max="0.5" step="0.01" value="0.18" aria-label="Volume toni Zen">
+      </div>
+      <div class="control-item">
+        <span>VOLUME RUMORE <b id="val-zen-noise-volume">20%</b></span>
+        <input type="range" id="sl-zen-noise-volume" min="0" max="0.5" step="0.01" value="0.20" aria-label="Volume rumore Zen">
+      </div>
+      <div class="control-item">
+        <span>TIMER DISSOLVENZA</span>
+        <div style="display:flex; gap:6px; width:100%;">
+          <select id="zen-sleep-duration" aria-label="Durata del timer" style="flex:1; background:#1b1028; color:#e4d7ff; border:1px solid #6f5594; border-radius:8px; padding:8px; font-size:11px;">
+            <option value="15">15 minuti</option><option value="30">30 minuti</option><option value="45">45 minuti</option><option value="60">60 minuti</option>
+          </select>
+          <button class="chip-btn" id="btn-zen-timer" aria-pressed="false" onclick="toggleZenSleepTimer()">AVVIA TIMER</button>
+        </div>
+      </div>
+      <div class="slider-hint" id="zen-timer-status" role="status" aria-live="polite">Audio Zen indipendente dal piano. Il timer dissolve le sorgenti Zen nell'ultimo minuto e poi le arresta.</div>
+      <div class="slider-hint">I battimenti binaurali richiedono cuffie stereo. Le percezioni e gli effetti soggettivi variano; questi suoni non sono un trattamento medico. La ciotola è un drone sintetico armonico.</div>
     </div>
 
     <div class="panel-section" style="border-color:#00e5ff; background:rgba(0, 28, 36, 0.55);">
@@ -5128,6 +5190,14 @@ void main() {
     let audioCtx = null;
     let masterGain = null, dryGain = null, reverbGain = null, reverbNode = null;
     let micGainMultiplier = 2.0;
+    const zenAudio = {
+      toneFrequency: 432, binauralBeat: 0, noiseColor: 'OFF', toneVolume: 0.18, noiseVolume: 0.20,
+      toneBus: null, noiseBus: null, tone: null, binaural: null, bowl: null, noise: null,
+      noiseBuffers: {}, timerId: 0, timerEndsAt: 0, timerFade: 1
+    };
+    function zenAudioIsActive() {
+      return !!(zenAudio.tone || zenAudio.binaural || zenAudio.bowl || zenAudio.noise);
+    }
 
     // --- MODALITÀ FORZA TOCCO (ATTRAZIONE / REPULSIONE) ---
     let touchForceMode = 'ATTRACT'; // 'ATTRACT' o 'REPEL'
@@ -5401,7 +5471,7 @@ void main() {
       new MutationObserver(ms => { for (const m of ms) if (m.target.matches && m.target.matches(sel)) syncPressed(m.target); })
         .observe(document.body, { attributes: true, attributeFilter: ['class'], subtree: true });
     }
-    // sospensione in background: niente camera/mic/audio attivi a schermo spento
+    // Sospende le periferiche e l'audio ordinario in background, ma lascia attivo il layer Zen richiesto dall'utente.
     const _resume = { mic: false, cam: false };
     async function _granted(name) { try { return (await navigator.permissions.query({ name })).state === 'granted'; } catch (e) { return false; } }
     document.addEventListener('visibilitychange', async () => {
@@ -5410,9 +5480,9 @@ void main() {
         if (isRecordingVideo) toggleVideoRecording();
         if (_resume.mic) toggleMicrophone();
         if (isWebcamOn) toggleWebcam();
-        if (audioCtx && audioCtx.state === 'running') audioCtx.suspend().catch(() => {});
+        if (audioCtx && audioCtx.state === 'running' && !zenAudioIsActive()) audioCtx.suspend().catch(() => {});
       } else {
-        if (audioCtx && audioCtx.state === 'suspended' && audioMode !== 'OFF') audioCtx.resume().catch(() => {});
+        if (audioCtx && audioCtx.state === 'suspended' && (audioMode !== 'OFF' || zenAudioIsActive())) audioCtx.resume().catch(() => {});
         const back = [];
         if (_resume.mic && !isMicTriggerOn && await _granted('microphone')) toggleMicrophone(); else if (_resume.mic) back.push('MIC');
         if (_resume.cam && !isWebcamOn && await _granted('camera')) toggleWebcam(); else if (_resume.cam) back.push('CAM');
@@ -5523,6 +5593,265 @@ void main() {
       } catch (e) {
         console.warn("Audio init warning:", e);
       }
+    }
+
+    function ensureZenBuses() {
+      if (!zenAudio.timerId && zenAudio.timerFade === 0) zenAudio.timerFade = 1;
+      initAudio();
+      if (!audioCtx || !dryGain) {
+        showToast('Audio Zen non disponibile in questo browser.');
+        return false;
+      }
+      if (!zenAudio.toneBus) {
+        zenAudio.toneBus = audioCtx.createGain();
+        zenAudio.noiseBus = audioCtx.createGain();
+        zenAudio.toneBus.gain.value = zenAudio.toneVolume * zenAudio.timerFade;
+        zenAudio.noiseBus.gain.value = zenAudio.noiseVolume * zenAudio.timerFade;
+        zenAudio.toneBus.connect(dryGain);
+        zenAudio.noiseBus.connect(dryGain);
+        if (reverbGain) zenAudio.toneBus.connect(reverbGain);
+      }
+      setZenBusLevels();
+      return true;
+    }
+    function setZenBusLevels() {
+      if (!audioCtx || !zenAudio.toneBus) return;
+      const now = audioCtx.currentTime;
+      zenAudio.toneBus.gain.setTargetAtTime(zenAudio.toneVolume * zenAudio.timerFade, now, 0.08);
+      zenAudio.noiseBus.gain.setTargetAtTime(zenAudio.noiseVolume * zenAudio.timerFade, now, 0.08);
+    }
+    function createZenVoice(bus, level) {
+      const voice = { gain: audioCtx.createGain(), nodes: [] };
+      const now = audioCtx.currentTime;
+      voice.gain.gain.setValueAtTime(0.0001, now);
+      voice.gain.connect(bus);
+      voice.gain.gain.linearRampToValueAtTime(level, now + 0.6);
+      return voice;
+    }
+    function stopZenVoice(voice) {
+      if (!voice || !audioCtx) return;
+      const now = audioCtx.currentTime;
+      voice.gain.gain.cancelScheduledValues(now);
+      voice.gain.gain.setValueAtTime(Math.max(0.0001, voice.gain.gain.value), now);
+      voice.gain.gain.linearRampToValueAtTime(0.0001, now + 0.4);
+      setTimeout(() => {
+        voice.nodes.forEach(node => {
+          try { if (node.stop) node.stop(); } catch (e) {}
+          try { node.disconnect(); } catch (e) {}
+        });
+        try { voice.gain.disconnect(); } catch (e) {}
+      }, 450);
+    }
+    function updateZenToggle(id, on, onText, offText) {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.textContent = on ? onText : offText;
+      btn.classList.toggle('active', on);
+      btn.setAttribute('aria-pressed', String(on));
+    }
+    function setZenToneFrequency(value) {
+      zenAudio.toneFrequency = Number(value);
+      if (zenAudio.tone) {
+        stopZenVoice(zenAudio.tone);
+        zenAudio.tone = null;
+        startZenTone();
+      }
+    }
+    function startZenTone() {
+      if (!ensureZenBuses()) return;
+      const voice = createZenVoice(zenAudio.toneBus, 0.48);
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = zenAudio.toneFrequency;
+      osc.connect(voice.gain);
+      osc.start();
+      voice.nodes.push(osc);
+      zenAudio.tone = voice;
+      updateZenToggle('btn-zen-tone', true, 'TONO: ON', 'TONO: OFF');
+    }
+    function toggleZenTone() {
+      if (zenAudio.tone) {
+        stopZenVoice(zenAudio.tone);
+        zenAudio.tone = null;
+        updateZenToggle('btn-zen-tone', false, 'TONO: ON', 'TONO: OFF');
+      } else startZenTone();
+    }
+    function setZenBinauralBand(value) {
+      zenAudio.binauralBeat = Number(value) || 0;
+      if (zenAudio.binaural) {
+        stopZenVoice(zenAudio.binaural);
+        zenAudio.binaural = null;
+      }
+      if (zenAudio.binauralBeat > 0) {
+        if (!ensureZenBuses()) return;
+        const voice = createZenVoice(zenAudio.toneBus, 0.42);
+        const merger = audioCtx.createChannelMerger(2);
+        merger.connect(voice.gain);
+        voice.nodes.push(merger);
+        [150, 150 + zenAudio.binauralBeat].forEach((frequency, index) => {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = frequency;
+          gain.gain.value = 0.5;
+          osc.connect(gain);
+          gain.connect(merger, 0, index);
+          osc.start();
+          voice.nodes.push(osc, gain);
+        });
+        zenAudio.binaural = voice;
+      }
+    }
+    function createZenNoiseBuffer(color) {
+      if (zenAudio.noiseBuffers[color]) return zenAudio.noiseBuffers[color];
+      const rate = audioCtx.sampleRate || 44100;
+      const length = rate * 8;
+      const buffer = audioCtx.createBuffer(1, length, rate);
+      const data = buffer.getChannelData(0);
+      let brown = 0, b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
+      for (let i = 0; i < length; i++) {
+        const white = Math.random() * 2 - 1;
+        if (color === 'BROWN') {
+          brown = (brown + 0.02 * white) / 1.02;
+          data[i] = brown * 3.5;
+        } else {
+          b0 = 0.99886 * b0 + white * 0.0555179;
+          b1 = 0.99332 * b1 + white * 0.0750759;
+          b2 = 0.96900 * b2 + white * 0.1538520;
+          b3 = 0.86650 * b3 + white * 0.3104856;
+          b4 = 0.55000 * b4 + white * 0.5329522;
+          b5 = -0.7616 * b5 - white * 0.0168980;
+          data[i] = (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362) * 0.11;
+          b6 = white * 0.115926;
+        }
+      }
+      const seam = Math.floor(rate * 0.05), start = length - seam;
+      for (let i = 0; i < seam; i++) {
+        const mix = i / seam;
+        data[start + i] = data[start + i] * (1 - mix) + data[i] * mix;
+      }
+      zenAudio.noiseBuffers[color] = buffer;
+      return buffer;
+    }
+    function setZenNoiseColor(value) {
+      zenAudio.noiseColor = value;
+      if (zenAudio.noise) {
+        stopZenVoice(zenAudio.noise);
+        zenAudio.noise = null;
+      }
+      if (value === 'OFF' || !ensureZenBuses()) return;
+      const voice = createZenVoice(zenAudio.noiseBus, 0.72);
+      const source = audioCtx.createBufferSource();
+      source.buffer = createZenNoiseBuffer(value);
+      source.loop = true;
+      source.connect(voice.gain);
+      source.start();
+      voice.nodes.push(source);
+      zenAudio.noise = voice;
+    }
+    function toggleZenBowl() {
+      if (zenAudio.bowl) {
+        stopZenVoice(zenAudio.bowl);
+        zenAudio.bowl = null;
+      } else {
+        if (!ensureZenBuses()) return;
+        const voice = createZenVoice(zenAudio.toneBus, 0.34);
+        const lfo = audioCtx.createOscillator();
+        const depth = audioCtx.createGain();
+        lfo.frequency.value = 0.1;
+        depth.gain.value = 0.8;
+        lfo.connect(depth);
+        [174.6, 349.2, 523.8].forEach((frequency, index) => {
+          const osc = audioCtx.createOscillator();
+          const partial = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = frequency;
+          partial.gain.value = [0.72, 0.2, 0.08][index];
+          depth.connect(osc.frequency);
+          osc.connect(partial);
+          partial.connect(voice.gain);
+          osc.start();
+          voice.nodes.push(osc, partial);
+        });
+        lfo.start();
+        voice.nodes.push(lfo, depth);
+        zenAudio.bowl = voice;
+      }
+      updateZenToggle('btn-zen-bowl', !!zenAudio.bowl, 'CIOTOLA ARMONICA: ON', 'CIOTOLA ARMONICA: OFF');
+    }
+    function stopZenSources() {
+      ['tone', 'binaural', 'bowl', 'noise'].forEach(key => {
+        if (zenAudio[key]) stopZenVoice(zenAudio[key]);
+        zenAudio[key] = null;
+      });
+      updateZenToggle('btn-zen-tone', false, 'TONO: ON', 'TONO: OFF');
+      updateZenToggle('btn-zen-bowl', false, 'CIOTOLA ARMONICA: ON', 'CIOTOLA ARMONICA: OFF');
+      const band = document.getElementById('zen-binaural-band');
+      const noise = document.getElementById('zen-noise-color');
+      if (band) band.value = 'OFF';
+      if (noise) noise.value = 'OFF';
+      zenAudio.binauralBeat = 0;
+      zenAudio.noiseColor = 'OFF';
+    }
+    function setZenPreset(preset) {
+      stopZenSources();
+      if (zenAudio.timerId) toggleZenSleepTimer();
+      zenAudio.timerFade = 1;
+      setZenBusLevels();
+      if (preset === 'SLEEP') {
+        document.getElementById('zen-binaural-band').value = '2';
+        document.getElementById('zen-noise-color').value = 'BROWN';
+        setZenBinauralBand('2');
+        setZenNoiseColor('BROWN');
+      } else if (preset === '432' || preset === '528') {
+        const frequency = preset === '432' ? '432' : '528';
+        document.getElementById('zen-tone-frequency').value = frequency;
+        setZenToneFrequency(frequency);
+        startZenTone();
+      } else if (preset === 'BOWL') {
+        document.getElementById('zen-binaural-band').value = '6';
+        setZenBinauralBand('6');
+        toggleZenBowl();
+      }
+    }
+    function toggleZenBreathing() {
+      const active = !document.getElementById('zen-breath-guide').classList.contains('active');
+      document.getElementById('zen-breath-guide').classList.toggle('active', active);
+      updateZenToggle('btn-zen-breath', active, 'RESPIRO GUIDATO: ON', 'RESPIRO GUIDATO: OFF');
+    }
+    function toggleZenSleepTimer() {
+      const status = document.getElementById('zen-timer-status');
+      const button = document.getElementById('btn-zen-timer');
+      if (zenAudio.timerId) {
+        clearInterval(zenAudio.timerId);
+        zenAudio.timerId = 0;
+        zenAudio.timerEndsAt = 0;
+        zenAudio.timerFade = 1;
+        setZenBusLevels();
+        if (status) status.textContent = 'Timer annullato.';
+        if (button) { button.textContent = 'AVVIA TIMER'; button.setAttribute('aria-pressed', 'false'); }
+        return;
+      }
+      const minutes = Number(document.getElementById('zen-sleep-duration').value);
+      if (![15, 30, 45, 60].includes(minutes)) {
+        showToast('Seleziona una durata valida per il timer.');
+        return;
+      }
+      zenAudio.timerEndsAt = Date.now() + minutes * 60000;
+      if (button) { button.textContent = 'ANNULLA TIMER'; button.setAttribute('aria-pressed', 'true'); }
+      zenAudio.timerId = setInterval(() => {
+        const remaining = Math.max(0, Math.ceil((zenAudio.timerEndsAt - Date.now()) / 1000));
+        zenAudio.timerFade = Math.min(1, remaining / 60);
+        setZenBusLevels();
+        if (status) status.textContent = (remaining > 60 ? 'Timer Zen: ' : 'Dissolvenza Zen: ') + Math.floor(remaining / 60) + ':' + String(remaining % 60).padStart(2, '0');
+        if (remaining === 0) {
+          clearInterval(zenAudio.timerId);
+          zenAudio.timerId = 0;
+          stopZenSources();
+          if (status) status.textContent = 'Timer completato: sorgenti Zen arrestate.';
+          if (button) { button.textContent = 'AVVIA TIMER'; button.setAttribute('aria-pressed', 'false'); }
+        }
+      }, 500);
     }
 
     // ===== v2.22: logica anti-martellamento (note a frasi, non a metronomo) =====
@@ -5852,7 +6181,7 @@ void main() {
       el.textContent = 'AUDIO ' + (audioCtx ? audioCtx.state : 'non avviato') + ' · oscillatori vivi ' + liveOsc + '/' + maxOsc() + ' · drone ' + droneVoices.size + ' · impatti/s ' + hps + ' · ultimo ' + CR.lastSpeed.toFixed(1) + ' · note/s cin ' + nsr.kin + ' cri ' + nsr.cry + ' anelli ' + nsr.ring + ' mic ' + nsr.mic + ' · mic ' + (isMicTriggerOn ? (isMicSimulated ? 'simulato' : 'reale ' + Math.round(voiceEnergy * 100) + '%') : 'off') + ' · errore: ' + (lastAudioError || '—');
     }, 600);
     setInterval(() => {   // se il sistema ferma l'audio, riprova e avvisa
-      if (!audioCtx || audioMode === 'OFF' || document.hidden || audioCtx.state === 'running') return;
+      if (!audioCtx || (audioMode === 'OFF' && !zenAudioIsActive()) || document.hidden || audioCtx.state === 'running') return;
       audioCtx.resume().catch(() => {});
       const t = performance.now(); if (t - _stallWarn > 20000) { _stallWarn = t; showToast('Audio interrotto dal sistema (' + audioCtx.state + ').\nTocca lo schermo per riattivarlo.'); }
     }, 2500);
@@ -7521,6 +7850,16 @@ void main() {
       });
 
       // Motore Audio Pianoforte & Sonificazione
+      bindSlider('sl-zen-tone-volume', 'val-zen-tone-volume', v => {
+        zenAudio.toneVolume = v;
+        const el = document.getElementById('val-zen-tone-volume'); if (el) el.innerText = Math.round(v * 100) + '%';
+        setZenBusLevels();
+      });
+      bindSlider('sl-zen-noise-volume', 'val-zen-noise-volume', v => {
+        zenAudio.noiseVolume = v;
+        const el = document.getElementById('val-zen-noise-volume'); if (el) el.innerText = Math.round(v * 100) + '%';
+        setZenBusLevels();
+      });
       bindSlider('sl-piano-bright', 'val-piano-bright', v => pianoBrightness = v);
       bindSlider('sl-note-attack', 'val-note-attack', v => {
         noteAttack = 0.005 * Math.pow(400, v / 100);   // 5 ms … 2 s, scala esponenziale
